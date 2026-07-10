@@ -587,8 +587,7 @@
       });
     }
 
-    // === Cross-tab music sync ===
-    // SONGS data — harus sama dengan src/config/content.js
+    // === Cross-tab music sync via localStorage polling ===
     const SONGS = [
       {
         src: "/music/Barasuara - Terbuang Dalam Waktu.mp3",
@@ -613,13 +612,10 @@
       },
     ];
 
-    // Music state
-    let musicState = {
-      songIndex: 0,
-      isPlaying: false,
-      seek: 0,
-      isOverlayOpen: false,
-    };
+    let auroraSound = null;
+    let isLocalPlaying = false;
+    let localSongIndex = 0;
+    let lastSyncTs = 0;
 
     // DOM refs
     const musicTitle = document.getElementById('musicTitle');
@@ -629,34 +625,62 @@
     const musicOverlay = document.getElementById('musicOverlay');
     const musicTrigger = document.getElementById('musicTrigger');
 
-    // Try restore from localStorage
-    try {
-      const saved = JSON.parse(localStorage.getItem('music-state'));
-      if (saved && saved.songIndex !== undefined) {
-        musicState.songIndex = saved.songIndex;
-        musicState.isPlaying = saved.type === 'play';
-        musicState.seek = saved.seek || 0;
-      }
-    } catch (e) {}
+    // Load initial state from localStorage
+    function syncFromStorage() {
+      try {
+        const raw = localStorage.getItem('music-state');
+        if (!raw) return;
+        const saved = JSON.parse(raw);
+        if (!saved || saved.songIndex === undefined) return;
+        if (saved.ts && saved.ts <= lastSyncTs) return;
 
-    let auroraSound = null;
-    let auroraProgressInterval = null;
+        lastSyncTs = saved.ts || Date.now();
 
-    function loadAuroraSong(idx, seekPos, autoPlay) {
+        const newIdx = saved.songIndex || 0;
+        const wasPlaying = saved.type === 'play';
+        const seekPos = saved.seek || 0;
+
+        // If song changed, load new one
+        if (newIdx !== localSongIndex) {
+          localSongIndex = newIdx;
+          loadLocalSong(newIdx, seekPos, wasPlaying);
+        } else if (wasPlaying !== isLocalPlaying) {
+          // Play state changed
+          isLocalPlaying = wasPlaying;
+          if (wasPlaying && auroraSound) {
+            auroraSound.seek(seekPos);
+            auroraSound.play();
+            musicPlayBtn.textContent = '⏸';
+          } else if (auroraSound) {
+            auroraSound.pause();
+            musicPlayBtn.textContent = '▶';
+          }
+        } else if (wasPlaying && auroraSound && seekPos > 0) {
+          // Just sync seek position
+          const currentSeek = auroraSound.seek() || 0;
+          if (Math.abs(currentSeek - seekPos) > 2) {
+            auroraSound.seek(seekPos);
+          }
+        }
+      } catch (e) {}
+    }
+
+    function loadLocalSong(idx, seekPos, autoPlay) {
       if (auroraSound) {
         auroraSound.unload();
         auroraSound = null;
       }
-      clearInterval(auroraProgressInterval);
 
       const song = SONGS[idx];
       if (!song) return;
 
-      // Update UI
+      isLocalPlaying = autoPlay;
+
+      // Update UI immediately
       musicTitle.textContent = song.title;
       musicArtist.textContent = song.artist;
       musicPoster.style.background = `linear-gradient(135deg, ${song.poster}, ${song.color})`;
-      musicPlayBtn.textContent = autoPlay ? '⏸' : '▶';
+      musicPlayBtn.textContent = '▶';
 
       auroraSound = new Howl({
         src: [song.src],
@@ -670,80 +694,45 @@
           }
         },
         onplay: function () {
-          musicState.isPlaying = true;
+          isLocalPlaying = true;
           musicPlayBtn.textContent = '⏸';
         },
         onpause: function () {
-          musicState.isPlaying = false;
+          isLocalPlaying = false;
           musicPlayBtn.textContent = '▶';
         },
         onstop: function () {
-          musicState.isPlaying = false;
+          isLocalPlaying = false;
           musicPlayBtn.textContent = '▶';
         },
         onend: function () {
-          musicState.isPlaying = false;
+          isLocalPlaying = false;
           musicPlayBtn.textContent = '▶';
+        },
+        onplayerror: function () {
+          // Autoplay blocked — show play button
+          musicPlayBtn.textContent = '▶';
+          isLocalPlaying = false;
         },
       });
     }
 
-    // Listen for broadcasts
-    const bc = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('music-sync') : null;
-    if (bc) {
-      bc.onmessage = (e) => {
-        const data = e.data;
-        if (!data || !data.type) return;
-
-        switch (data.type) {
-          case 'play':
-            if (data.songIndex !== undefined && data.songIndex !== musicState.songIndex) {
-              loadAuroraSong(data.songIndex, 0, true);
-            } else if (auroraSound) {
-              auroraSound.play();
-            }
-            musicState.songIndex = data.songIndex;
-            musicState.isPlaying = true;
-            break;
-
-          case 'pause':
-            if (auroraSound) auroraSound.pause();
-            musicState.isPlaying = false;
-            break;
-
-          case 'stop':
-            if (auroraSound) {
-              auroraSound.stop();
-              auroraSound.unload();
-              auroraSound = null;
-            }
-            musicState.isPlaying = false;
-            break;
-
-          case 'songchange':
-            loadAuroraSong(data.songIndex, 0, musicState.isPlaying);
-            musicState.songIndex = data.songIndex;
-            break;
-
-          case 'seek':
-            if (auroraSound && data.seek !== undefined) auroraSound.seek(data.seek);
-            break;
-        }
-      };
-    }
+    // Poll localStorage every 600ms
+    syncFromStorage();
+    setInterval(syncFromStorage, 600);
 
     // Music control functions
     window.toggleMusicOverlay = function () {
-      musicState.isOverlayOpen = !musicState.isOverlayOpen;
-      musicOverlay.style.display = musicState.isOverlayOpen ? 'flex' : 'none';
+      const isOpen = musicOverlay.style.display !== 'none';
+      musicOverlay.style.display = isOpen ? 'none' : 'flex';
     };
 
     window.musicToggle = function () {
       if (!auroraSound) {
-        loadAuroraSong(musicState.songIndex, 0, true);
+        loadLocalSong(localSongIndex, 0, true);
         return;
       }
-      if (musicState.isPlaying) {
+      if (isLocalPlaying) {
         auroraSound.pause();
         musicPlayBtn.textContent = '▶';
       } else {
@@ -753,19 +742,23 @@
     };
 
     window.musicNext = function () {
-      const next = (musicState.songIndex + 1) % SONGS.length;
-      musicState.songIndex = next;
-      loadAuroraSong(next, 0, musicState.isPlaying);
+      const next = (localSongIndex + 1) % SONGS.length;
+      localSongIndex = next;
+      loadLocalSong(next, 0, isLocalPlaying);
+      // Also try to sync back: save to localStorage so main app can follow
+      try {
+        localStorage.setItem('music-state', JSON.stringify({ type: 'songchange', songIndex: next, seek: 0, ts: Date.now() }));
+      } catch (e) {}
     };
 
     window.musicPrev = function () {
-      const prev = (musicState.songIndex - 1 + SONGS.length) % SONGS.length;
-      musicState.songIndex = prev;
-      loadAuroraSong(prev, 0, musicState.isPlaying);
+      const prev = (localSongIndex - 1 + SONGS.length) % SONGS.length;
+      localSongIndex = prev;
+      loadLocalSong(prev, 0, isLocalPlaying);
+      try {
+        localStorage.setItem('music-state', JSON.stringify({ type: 'songchange', songIndex: prev, seek: 0, ts: Date.now() }));
+      } catch (e) {}
     };
-
-    // Load initial song from saved state
-    loadAuroraSong(musicState.songIndex, musicState.seek, musicState.isPlaying);
 
     // === Aurora main loop ===
     let time = 0;
