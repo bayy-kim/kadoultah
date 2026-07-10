@@ -735,9 +735,15 @@
       if (isLocalPlaying) {
         auroraSound.pause();
         musicPlayBtn.textContent = '▶';
+        try {
+          localStorage.setItem('music-state', JSON.stringify({ type: 'pause', songIndex: localSongIndex, seek: auroraSound.seek() || 0, ts: Date.now() }));
+        } catch (e) {}
       } else {
         auroraSound.play();
         musicPlayBtn.textContent = '⏸';
+        try {
+          localStorage.setItem('music-state', JSON.stringify({ type: 'play', songIndex: localSongIndex, seek: auroraSound.seek() || 0, ts: Date.now() }));
+        } catch (e) {}
       }
     };
 

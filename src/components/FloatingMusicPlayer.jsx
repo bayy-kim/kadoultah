@@ -7,9 +7,12 @@ import { SONGS } from '../config/content'
 // BroadcastChannel untuk sinkron ke aurora-night.html
 const BC = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('music-sync') : null
 
+let _ownTs = 0
+
 function broadcast(state) {
+  _ownTs = Date.now()
   if (BC) BC.postMessage(state)
-  localStorage.setItem('music-state', JSON.stringify({ ...state, ts: Date.now() }))
+  localStorage.setItem('music-state', JSON.stringify({ ...state, ts: _ownTs }))
 }
 
 export default function FloatingMusicPlayer({ autoPlay = false }) {
@@ -22,6 +25,12 @@ export default function FloatingMusicPlayer({ autoPlay = false }) {
   const progressInterval = useRef(null)
   const currentSong = SONGS[songIndex]
 
+  // Refs for polling (always fresh)
+  const songIndexRef = useRef(songIndex)
+  const isPlayingRef = useRef(isPlaying)
+  songIndexRef.current = songIndex
+  isPlayingRef.current = isPlaying
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -30,6 +39,44 @@ export default function FloatingMusicPlayer({ autoPlay = false }) {
       broadcast({ type: 'stop', songIndex: 0, seek: 0 })
     }
   }, [])
+
+  // Poll localStorage for external changes (from aurora page)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      try {
+        const raw = localStorage.getItem('music-state')
+        if (!raw) return
+        const saved = JSON.parse(raw)
+        if (!saved || saved.songIndex === undefined) return
+        if (saved.ts && saved.ts <= _ownTs) return
+
+        // External change detected!
+        _ownTs = saved.ts
+
+        const newIdx = saved.songIndex
+        const h = howlerRef.current
+        const curIdx = songIndexRef.current
+        const curPlaying = isPlayingRef.current
+
+        if (newIdx !== curIdx) {
+          // Different song — just update state, useEffect will handle loading
+          setSongIndex(newIdx)
+        }
+
+        const targetPlaying = saved.type === 'play'
+        if (targetPlaying !== curPlaying && h) {
+          if (targetPlaying) {
+            h.play()
+            setIsPlaying(true)
+          } else {
+            h.pause()
+          }
+        }
+      } catch (e) {}
+    }, 600)
+
+    return () => clearInterval(interval)
+  }, []) // Only mount once
 
   // Load & play when song changes
   useEffect(() => {
