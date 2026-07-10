@@ -95,9 +95,9 @@ export default function FloatingMusicPlayer({ autoPlay = false }) {
       onplay: () => { setIsPlaying(true); updateProgress(); broadcast({ type: 'play', songIndex }) },
       onpause: () => { setIsPlaying(false); clearInterval(progressInterval.current); broadcast({ type: 'pause', songIndex, seek: howlerRef.current?.seek() || 0 }) },
       onend: () => {
-        setIsPlaying(false)
         clearInterval(progressInterval.current)
         setProgress(0)
+        // Don't setIsPlaying(false) — keeps true so next song auto-plays
         broadcast({ type: 'pause', songIndex, seek: 0 })
         handleNext()
       },
