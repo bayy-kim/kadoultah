@@ -69,6 +69,16 @@ export default function ClosingSection() {
       <div ref={cardRef} className="closing-card">
         <p className="closing-message">{CLOSING_MESSAGE}</p>
       </div>
+
+      {/* Lanjutkan Cerita button */}
+      <button
+        className="closing-next-btn"
+        onClick={() => window.open('/aurora-night.html', '_blank')}
+      >
+        Lanjutkan Cerita ✨
+        <span className="closing-next-arrow">→</span>
+      </button>
+
       <div className="closing-credit">Made with ❤️ for yeshi</div>
     </section>
   );

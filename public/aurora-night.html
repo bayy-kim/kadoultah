@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Happy Birthday ✨</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: #050510;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #ffffff;
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+    
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* Scrollable Container */
+    .scroll-container {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 4rem 1.5rem 6rem;
+      gap: 3rem;
+    }
+
+    /* Header Section */
+    .header-section {
+      text-align: center;
+      margin-bottom: 1rem;
+      pointer-events: none;
+    }
+    .header-section h1 {
+      font-family: 'Georgia', serif;
+      font-size: clamp(2.5rem, 8vw, 4.5rem);
+      color: #ffffff;
+      text-shadow:
+        0 0 20px rgba(80, 255, 180, 0.6),
+        0 0 60px rgba(80, 255, 180, 0.2);
+      letter-spacing: 0.05em;
+      line-height: 1.2;
+    }
+    .header-section p {
+      font-size: clamp(1rem, 2.5vw, 1.4rem);
+      color: rgba(255, 255, 255, 0.7);
+      margin-top: 0.75rem;
+      font-weight: 300;
+      letter-spacing: 0.1em;
+      text-shadow: 0 0 15px rgba(80, 255, 180, 0.2);
+    }
+
+    /* Liquid Glass Card */
+    .glass-card {
+      width: 100%;
+      max-width: 580px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 32px;
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      box-shadow: 
+        0 4px 30px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+      padding: 2.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .glass-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -50%;
+      width: 200%;
+      height: 100%;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.05),
+        transparent
+      );
+      transform: rotate(-30deg);
+      pointer-events: none;
+    }
+
+    /* Letter/Poem styling */
+    .letter-body {
+      font-size: 1.05rem;
+      line-height: 1.8;
+      color: rgba(255, 255, 255, 0.85);
+      font-weight: 300;
+      text-align: justify;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+    .letter-body p {
+      margin: 0;
+    }
+
+    /* Divider */
+    .card-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(80, 255, 180, 0.3), transparent);
+      border: none;
+    }
+
+    /* QRIS Section */
+    .qris-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+      text-align: center;
+    }
+    .qris-title {
+      font-size: 1.15rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      color: #50ffb4;
+      text-shadow: 0 0 10px rgba(80, 255, 180, 0.3);
+    }
+    .qris-info {
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.6);
+      line-height: 1.5;
+    }
+    .qris-info strong {
+      color: #ffffff;
+    }
+    .qris-frame {
+      width: 220px;
+      height: 220px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 10px;
+      box-shadow: 
+        0 10px 30px rgba(0, 0, 0, 0.4),
+        0 0 20px rgba(80, 255, 180, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      transition: transform 0.3s ease;
+    }
+    .qris-frame:hover {
+      transform: scale(1.03);
+    }
+    .qris-image {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 12px;
+    }
+
+    /* Back Button */
+    .back-btn {
+      padding: 0.75rem 2.2rem;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 50px;
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      color: rgba(255, 255, 255, 0.75);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      letter-spacing: 0.05em;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    }
+    .back-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(80, 255, 180, 0.4);
+      color: #ffffff;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(80, 255, 180, 0.15);
+    }
+    .back-btn:active {
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <!-- Aurora Background Canvas -->
+  <canvas id="c"></canvas>
+
+  <div class="scroll-container">
+    <!-- Header -->
+    <div class="header-section">
+      <h1>Happy Birthday ✨</h1>
+      <p>yang ke-19 tahun</p>
+    </div>
+
+    <!-- Liquid Glass Card -->
+    <div class="glass-card">
+      <div class="letter-body">
+        <p>
+          Malam yang sunyi di bawah taburan bintang ini, aku ingin menyampaikan sesuatu yang spesial. Waktu terus bergulir, tapi kenangan-kenangan manis bersamamu tak pernah pudar sedikit pun dari ingatanku.
+        </p>
+        <p>
+          Melihatmu tumbuh menjadi sosok yang luar biasa di usia 19 tahun ini adalah kebahagiaan tersendiri bagiku. Semoga di tahun yang baru ini, setiap langkahmu dipenuhi keberkahan, impianmu didekatkan, dan hari-harimu selalu dihiasi oleh senyuman yang paling tulus.
+        </p>
+        <p>
+          Terima kasih telah mewarnai hari-hariku dengan kehadiranmu yang begitu berarti. Selamat ulang tahun, berbahagialah selalu di mana pun kamu berada.
+        </p>
+      </div>
+
+      <hr class="card-divider">
+
+      <!-- QRIS Dana -->
+      <div class="qris-section">
+        <h3 class="qris-title">Kado Spesial Untukmu 🎁</h3>
+        <p class="qris-info">
+          Scan QRIS di bawah ini untuk menerima kado senilai<br>
+          <strong>Rp. 5.000.000</strong> ke akun DANA atas nama<br>
+          <strong>Bayu Muhamad Arib Irfani</strong>
+        </p>
+        <div class="qris-frame">
+          <img src="/fotoqris.jpeg" alt="QRIS DANA" class="qris-image">
+        </div>
+      </div>
+    </div>
+
+    <!-- Kembali Button -->
+    <button class="back-btn" onclick="window.close()">← Kembali</button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+    let W, H;
+
+    function resize() {
+      W = canvas.width = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    // === Stars ===
+    const stars = [];
+    const numStars = Math.min(150, Math.floor(W * 0.15)); // Limit stars for performance
+    for (let i = 0; i < numStars; i++) {
+      stars.push({
+        x: Math.random() * W,
+        y: Math.random() * H * 0.8,
+        r: 0.3 + Math.random() * 1.2,
+        speed: 0.003 + Math.random() * 0.012,
+        phase: Math.random() * Math.PI * 2,
+      });
+    }
+
+    // === Snow particles ===
+    const snow = [];
+    const numSnow = Math.min(100, Math.floor(W * 0.1)); // Limit snow for performance
+    for (let i = 0; i < numSnow; i++) {
+      snow.push({
+        x: Math.random() * (W + 40) - 20,
+        y: Math.random() * (H + 40) - 20,
+        r: 0.8 + Math.random() * 2,
+        speed: 0.4 + Math.random() * 0.8,
+        wind: -0.1 + Math.random() * 0.2,
+        drift: Math.random() * Math.PI * 2,
+      });
+    }
+
+    // === Aurora config (Slightly simplified for performance) ===
+    const auroraLayers = [
+      { y: H * 0.18, h: 100, speed: 0.1, amp: 60, freq: 0.006, hue: 140, sat: 80, light: 45 },
+      { y: H * 0.23, h: 80, speed: 0.08, amp: 45, freq: 0.008, hue: 155, sat: 70, light: 40 },
+      { y: H * 0.14, h: 50, speed: 0.12, amp: 35, freq: 0.009, hue: 130, sat: 60, light: 35 }
+    ];
+
+    // === Snow pile (static) ===
+    function drawSnowPile(time) {
+      const baseY = H - 25;
+      ctx.save();
+
+      ctx.beginPath();
+      ctx.moveTo(0, H);
+      for (let x = 0; x <= W; x += 8) { // Increased step size to 8 for speed
+        const noise = Math.sin(x * 0.008 + time * 0.15) * 3
+                    + Math.sin(x * 0.003) * 6;
+        const y = baseY + noise + Math.sin(x * 0.001 + 1) * 4;
+        ctx.lineTo(x, y);
+      }
+      ctx.lineTo(W, H);
+      ctx.closePath();
+
+      const grad = ctx.createLinearGradient(0, baseY - 20, 0, H);
+      grad.addColorStop(0, 'rgba(220, 240, 255, 0.08)');
+      grad.addColorStop(0.5, 'rgba(200, 225, 245, 0.2)');
+      grad.addColorStop(1, 'rgba(180, 205, 225, 0.3)');
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    // === Aurora ===
+    function drawAurora(time) {
+      auroraLayers.forEach((layer, idx) => {
+        ctx.save();
+        ctx.globalAlpha = 0.12 + idx * 0.03;
+
+        // Increased step to 4 for better mobile performance
+        for (let x = -30; x < W + 30; x += 4) {
+          const t = time * layer.speed + x * layer.freq;
+          const wave1 = Math.sin(t) * layer.amp;
+          const wave2 = Math.sin(t * 1.5 + 1.8) * layer.amp * 0.4;
+          const y = layer.y + wave1 + wave2;
+
+          const alpha = 0.25 + 0.25 * Math.sin(t + idx);
+
+          const grad = ctx.createRadialGradient(x, y, 2, x, y, 90);
+          const hue = layer.hue + Math.sin(time * 0.04 + idx) * 10;
+          grad.addColorStop(0, `hsla(${hue}, ${layer.sat}%, ${layer.light + 15}%, ${alpha})`);
+          grad.addColorStop(0.4, `hsla(${hue + 15}, ${layer.sat}%, ${layer.light}%, ${alpha * 0.3})`);
+          grad.addColorStop(1, `hsla(${hue + 30}, ${layer.sat}%, ${layer.light}%, 0)`);
+
+          ctx.fillStyle = grad;
+          ctx.fillRect(x - 50, y - 50, 100, 100);
+        }
+        ctx.restore();
+      });
+    }
+
+    // === Snow particles ===
+    function drawSnow(time) {
+      snow.forEach((s) => {
+        s.y += s.speed;
+        s.x += s.wind + Math.sin(time * 0.4 + s.drift) * 0.2;
+
+        if (s.y > H + 5) { s.y = -5; s.x = Math.random() * W; }
+        if (s.x < -30) s.x = W + 30;
+        if (s.x > W + 30) s.x = -30;
+
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(235, 245, 255, 0.4)';
+        ctx.fill();
+      });
+    }
+
+    // === Main loop ===
+    let time = 0;
+    function loop() {
+      time += 0.016;
+      const t = time;
+
+      // Deep sky gradient
+      const skyGrad = ctx.createLinearGradient(0, 0, 0, H);
+      skyGrad.addColorStop(0, '#04040c');
+      skyGrad.addColorStop(0.7, '#070718');
+      skyGrad.addColorStop(1, '#0c1228');
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0, 0, W, H);
+
+      // Stars
+      stars.forEach((s) => {
+        const twinkle = 0.3 + 0.7 * (0.5 + 0.5 * Math.sin(t * s.speed * 8 + s.phase));
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${twinkle})`;
+        ctx.fill();
+      });
+
+      // Aurora
+      drawAurora(t);
+
+      // Snow pile
+      drawSnowPile(t);
+
+      // Snow particles
+      drawSnow(t);
+
+      requestAnimationFrame(loop);
+    }
+    loop();
+  </script>
+</body>
+</html>

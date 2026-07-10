@@ -1423,6 +1423,69 @@ body {
   opacity: 0.6;
 }
 
+/* Lanjutkan Cerita Button */
+.closing-next-btn {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 2.5rem;
+  border: 1px solid var(--glass-border);
+  border-radius: 60px;
+  background: linear-gradient(135deg, hsla(var(--hue), 100%, 70%, 0.15), hsla(var(--hue), 100%, 70%, 0.05));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: var(--accent);
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.4s var(--ease-smooth);
+  box-shadow: 0 4px 24px hsla(var(--hue), 50%, 30%, 0.08);
+  margin-top: 1.5rem;
+  letter-spacing: 0.05em;
+  overflow: hidden;
+}
+
+.closing-next-btn::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end), var(--accent-secondary));
+  border-radius: 62px;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.4s var(--ease-smooth);
+  background-size: 200% 200%;
+  animation: shimmer 3s linear infinite;
+}
+
+.closing-next-btn:hover {
+  transform: translateY(-3px) scale(1.02);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 8px 40px hsla(var(--hue), 80%, 60%, 0.3);
+}
+
+.closing-next-btn:hover::before {
+  opacity: 1;
+}
+
+.closing-next-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.closing-next-arrow {
+  display: inline-block;
+  transition: transform 0.3s var(--ease-smooth);
+  font-size: 1.3rem;
+}
+
+.closing-next-btn:hover .closing-next-arrow {
+  transform: translateX(6px);
+}
+
 /* Mobile responsive for gallery + closing */
 @media (max-width: 768px) {
   .gallery-grid {
