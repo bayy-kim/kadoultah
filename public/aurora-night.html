@@ -241,7 +241,132 @@
     .back-btn:active {
       transform: translateY(0);
     }
+
+    /* Floating Music Trigger */
+    .music-trigger {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      z-index: 50;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: none;
+      background: linear-gradient(135deg, rgba(80,255,180,0.25), rgba(80,255,180,0.1));
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      color: #50ffb4;
+      font-size: 1.4rem;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(80,255,180,0.15);
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .music-trigger:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 30px rgba(80,255,180,0.3);
+    }
+
+    /* Music Card Overlay */
+    .music-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 2rem;
+      background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      animation: fadeIn 0.3s ease;
+    }
+    .music-card {
+      width: 100%;
+      max-width: 380px;
+      background: rgba(20,20,40,0.9);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 24px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      animation: slideUp 0.35s ease;
+    }
+    .music-poster {
+      width: 120px;
+      height: 120px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    }
+    .music-info {
+      text-align: center;
+    }
+    .music-info h3 {
+      font-size: 1.1rem;
+      color: #fff;
+      margin: 0;
+      font-weight: 600;
+    }
+    .music-info p {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.5);
+      margin: 0.25rem 0 0;
+    }
+    .music-controls {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      margin-top: 0.5rem;
+    }
+    .mc-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.06);
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      font-size: 1.1rem;
+    }
+    .mc-btn:hover {
+      background: rgba(255,255,255,0.12);
+      border-color: rgba(80,255,180,0.3);
+    }
+    .mc-play {
+      width: 56px;
+      height: 56px;
+      background: rgba(80,255,180,0.15);
+      border-color: rgba(80,255,180,0.3);
+      font-size: 1.4rem;
+    }
+    .mc-play:hover {
+      background: rgba(80,255,180,0.25);
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.4/howler.min.js"></script>
 </head>
 <body>
   <!-- Aurora Background Canvas -->
@@ -308,6 +433,24 @@
 
     <!-- Kembali Button -->
     <button class="back-btn" onclick="window.close()">← Kembali</button>
+  </div>
+
+  <!-- Floating Music Player -->
+  <button class="music-trigger" id="musicTrigger" onclick="toggleMusicOverlay()">🎵</button>
+
+  <div class="music-overlay" id="musicOverlay" style="display:none" onclick="toggleMusicOverlay()">
+    <div class="music-card" onclick="event.stopPropagation()">
+      <div class="music-poster" id="musicPoster" style="background:linear-gradient(135deg,#ff4070,#ff7597)">🎵</div>
+      <div class="music-info">
+        <h3 id="musicTitle">Barasuara</h3>
+        <p id="musicArtist">Terbuang Dalam Waktu</p>
+      </div>
+      <div class="music-controls">
+        <button class="mc-btn" onclick="musicPrev()">⏮</button>
+        <button class="mc-btn mc-play" id="musicPlayBtn" onclick="musicToggle()">▶</button>
+        <button class="mc-btn" onclick="musicNext()">⏭</button>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -433,19 +576,196 @@
 
     if (video && qrisSection) {
       video.addEventListener('ended', () => {
-        // Small delay biar smooth
         setTimeout(() => {
           qrisSection.classList.add('revealed');
-          // Scroll ke QRIS section
           qrisSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }, 400);
       });
 
-      // Fallback: jika video tidak ada / error, langsung tampilkan QRIS
       video.addEventListener('error', () => {
         qrisSection.classList.add('revealed');
       });
     }
+
+    // === Cross-tab music sync ===
+    // SONGS data — harus sama dengan src/config/content.js
+    const SONGS = [
+      {
+        src: "/music/Barasuara - Terbuang Dalam Waktu.mp3",
+        title: "Terbuang Dalam Waktu",
+        artist: "Barasuara",
+        color: "#ff7597",
+        poster: "#ff4070",
+      },
+      {
+        src: "/music/Yovie Nuno - Janji Suci.mp3",
+        title: "Janji Suci",
+        artist: "Yovie Nuno",
+        color: "#7c3aed",
+        poster: "#5b21b6",
+      },
+      {
+        src: "/music/Ari Lasso - Cinta Terakhir.mp3",
+        title: "Cinta Terakhir",
+        artist: "Ari Lasso",
+        color: "#06b6d4",
+        poster: "#0891b2",
+      },
+    ];
+
+    // Music state
+    let musicState = {
+      songIndex: 0,
+      isPlaying: false,
+      seek: 0,
+      isOverlayOpen: false,
+    };
+
+    // DOM refs
+    const musicTitle = document.getElementById('musicTitle');
+    const musicArtist = document.getElementById('musicArtist');
+    const musicPoster = document.getElementById('musicPoster');
+    const musicPlayBtn = document.getElementById('musicPlayBtn');
+    const musicOverlay = document.getElementById('musicOverlay');
+    const musicTrigger = document.getElementById('musicTrigger');
+
+    // Try restore from localStorage
+    try {
+      const saved = JSON.parse(localStorage.getItem('music-state'));
+      if (saved && saved.songIndex !== undefined) {
+        musicState.songIndex = saved.songIndex;
+        musicState.isPlaying = saved.type === 'play';
+        musicState.seek = saved.seek || 0;
+      }
+    } catch (e) {}
+
+    let auroraSound = null;
+    let auroraProgressInterval = null;
+
+    function loadAuroraSong(idx, seekPos, autoPlay) {
+      if (auroraSound) {
+        auroraSound.unload();
+        auroraSound = null;
+      }
+      clearInterval(auroraProgressInterval);
+
+      const song = SONGS[idx];
+      if (!song) return;
+
+      // Update UI
+      musicTitle.textContent = song.title;
+      musicArtist.textContent = song.artist;
+      musicPoster.style.background = `linear-gradient(135deg, ${song.poster}, ${song.color})`;
+      musicPlayBtn.textContent = autoPlay ? '⏸' : '▶';
+
+      auroraSound = new Howl({
+        src: [song.src],
+        html5: true,
+        preload: true,
+        onload: function () {
+          if (seekPos > 0) this.seek(seekPos);
+          if (autoPlay) {
+            this.play();
+            musicPlayBtn.textContent = '⏸';
+          }
+        },
+        onplay: function () {
+          musicState.isPlaying = true;
+          musicPlayBtn.textContent = '⏸';
+        },
+        onpause: function () {
+          musicState.isPlaying = false;
+          musicPlayBtn.textContent = '▶';
+        },
+        onstop: function () {
+          musicState.isPlaying = false;
+          musicPlayBtn.textContent = '▶';
+        },
+        onend: function () {
+          musicState.isPlaying = false;
+          musicPlayBtn.textContent = '▶';
+        },
+      });
+    }
+
+    // Listen for broadcasts
+    const bc = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('music-sync') : null;
+    if (bc) {
+      bc.onmessage = (e) => {
+        const data = e.data;
+        if (!data || !data.type) return;
+
+        switch (data.type) {
+          case 'play':
+            if (data.songIndex !== undefined && data.songIndex !== musicState.songIndex) {
+              loadAuroraSong(data.songIndex, 0, true);
+            } else if (auroraSound) {
+              auroraSound.play();
+            }
+            musicState.songIndex = data.songIndex;
+            musicState.isPlaying = true;
+            break;
+
+          case 'pause':
+            if (auroraSound) auroraSound.pause();
+            musicState.isPlaying = false;
+            break;
+
+          case 'stop':
+            if (auroraSound) {
+              auroraSound.stop();
+              auroraSound.unload();
+              auroraSound = null;
+            }
+            musicState.isPlaying = false;
+            break;
+
+          case 'songchange':
+            loadAuroraSong(data.songIndex, 0, musicState.isPlaying);
+            musicState.songIndex = data.songIndex;
+            break;
+
+          case 'seek':
+            if (auroraSound && data.seek !== undefined) auroraSound.seek(data.seek);
+            break;
+        }
+      };
+    }
+
+    // Music control functions
+    window.toggleMusicOverlay = function () {
+      musicState.isOverlayOpen = !musicState.isOverlayOpen;
+      musicOverlay.style.display = musicState.isOverlayOpen ? 'flex' : 'none';
+    };
+
+    window.musicToggle = function () {
+      if (!auroraSound) {
+        loadAuroraSong(musicState.songIndex, 0, true);
+        return;
+      }
+      if (musicState.isPlaying) {
+        auroraSound.pause();
+        musicPlayBtn.textContent = '▶';
+      } else {
+        auroraSound.play();
+        musicPlayBtn.textContent = '⏸';
+      }
+    };
+
+    window.musicNext = function () {
+      const next = (musicState.songIndex + 1) % SONGS.length;
+      musicState.songIndex = next;
+      loadAuroraSong(next, 0, musicState.isPlaying);
+    };
+
+    window.musicPrev = function () {
+      const prev = (musicState.songIndex - 1 + SONGS.length) % SONGS.length;
+      musicState.songIndex = prev;
+      loadAuroraSong(prev, 0, musicState.isPlaying);
+    };
+
+    // Load initial song from saved state
+    loadAuroraSong(musicState.songIndex, musicState.seek, musicState.isPlaying);
 
     // === Aurora main loop ===
     let time = 0;

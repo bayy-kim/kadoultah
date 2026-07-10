@@ -4,6 +4,14 @@ import { Howl } from 'howler'
 import { Play, Pause, SkipForward, SkipBack, X, Music } from 'lucide-react'
 import { SONGS } from '../config/content'
 
+// BroadcastChannel untuk sinkron ke aurora-night.html
+const BC = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('music-sync') : null
+
+function broadcast(state) {
+  if (BC) BC.postMessage(state)
+  localStorage.setItem('music-state', JSON.stringify({ ...state, ts: Date.now() }))
+}
+
 export default function FloatingMusicPlayer({ autoPlay = false }) {
   const [isOpen, setIsOpen] = useState(false)
   const [songIndex, setSongIndex] = useState(0)
@@ -19,6 +27,7 @@ export default function FloatingMusicPlayer({ autoPlay = false }) {
     return () => {
       if (howlerRef.current) howlerRef.current.unload()
       clearInterval(progressInterval.current)
+      broadcast({ type: 'stop', songIndex: 0, seek: 0 })
     }
   }, [])
 
@@ -29,24 +38,27 @@ export default function FloatingMusicPlayer({ autoPlay = false }) {
       clearInterval(progressInterval.current)
     }
 
+    broadcast({ type: 'songchange', songIndex })
+
     const sound = new Howl({
       src: [currentSong.src],
       html5: true,
       preload: true,
       onload: () => setDuration(sound.duration()),
-      onplay: () => { setIsPlaying(true); updateProgress() },
-      onpause: () => { setIsPlaying(false); clearInterval(progressInterval.current) },
+      onplay: () => { setIsPlaying(true); updateProgress(); broadcast({ type: 'play', songIndex }) },
+      onpause: () => { setIsPlaying(false); clearInterval(progressInterval.current); broadcast({ type: 'pause', songIndex, seek: howlerRef.current?.seek() || 0 }) },
       onend: () => {
         setIsPlaying(false)
         clearInterval(progressInterval.current)
         setProgress(0)
-        // Auto next
+        broadcast({ type: 'pause', songIndex, seek: 0 })
         handleNext()
       },
       onstop: () => {
         setIsPlaying(false)
         clearInterval(progressInterval.current)
         setProgress(0)
+        broadcast({ type: 'stop', songIndex, seek: 0 })
       },
     })
 
@@ -82,14 +94,15 @@ export default function FloatingMusicPlayer({ autoPlay = false }) {
     const pos = pct * duration
     howlerRef.current.seek(pos)
     setProgress(pos)
+    broadcast({ type: 'seek', songIndex, seek: pos })
   }
 
   const handlePrev = () => {
     const current = howlerRef.current?.seek() || 0
-    // If more than 3s in, restart current song; else go to previous
     if (current > 3) {
       howlerRef.current?.seek(0)
       setProgress(0)
+      broadcast({ type: 'seek', songIndex, seek: 0 })
     } else {
       setSongIndex((i) => (i === 0 ? SONGS.length - 1 : i - 1))
     }
