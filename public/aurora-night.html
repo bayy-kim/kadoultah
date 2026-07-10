@@ -124,6 +124,38 @@
       border: none;
     }
 
+    /* Video Section */
+    .video-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      text-align: center;
+      width: 100%;
+    }
+    .video-title {
+      font-size: 1.05rem;
+      color: rgba(255,255,255,0.7);
+      font-weight: 300;
+      letter-spacing: 0.05em;
+    }
+    .video-wrapper {
+      width: 100%;
+      max-width: 480px;
+      border-radius: 20px;
+      overflow: hidden;
+      background: #000;
+      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5), 0 0 20px rgba(80,255,180,0.08);
+      position: relative;
+    }
+    .video-wrapper video {
+      width: 100%;
+      display: block;
+      max-height: 320px;
+      object-fit: cover;
+    }
+
     /* QRIS Section */
     .qris-section {
       display: flex;
@@ -131,6 +163,17 @@
       align-items: center;
       gap: 1.5rem;
       text-align: center;
+      /* Hidden by default, revealed after video ends */
+      opacity: 0;
+      max-height: 0;
+      overflow: hidden;
+      pointer-events: none;
+      transition: opacity 0.8s ease, max-height 1.2s ease;
+    }
+    .qris-section.revealed {
+      opacity: 1;
+      max-height: 600px;
+      pointer-events: auto;
     }
     .qris-title {
       font-size: 1.15rem;
@@ -227,8 +270,30 @@
 
       <hr class="card-divider">
 
-      <!-- QRIS Dana -->
-      <div class="qris-section">
+      <!-- Video Section -->
+      <div class="video-section">
+        <p class="video-title">🎬 Tonton ini dulu ya...</p>
+        <div class="video-wrapper">
+          <!--
+            ✏️ GANTI: taruh file video kamu di folder public/
+            lalu ganti nama file di bawah ini.
+            Contoh: src="/video-ultah.mp4"
+          -->
+          <video
+            id="gift-video"
+            controls
+            playsinline
+            preload="metadata"
+            poster=""
+          >
+            <source src="/video-ultah.mp4" type="video/mp4">
+            Browser kamu tidak mendukung video.
+          </video>
+        </div>
+      </div>
+
+      <!-- QRIS Dana (muncul setelah video selesai) -->
+      <div class="qris-section" id="qris-section">
         <h3 class="qris-title">Kado Spesial Untukmu 🎁</h3>
         <p class="qris-info">
           Scan QRIS di bawah ini untuk menerima kado senilai<br>
@@ -362,7 +427,27 @@
       });
     }
 
-    // === Main loop ===
+    // === Video → QRIS reveal ===
+    const video = document.getElementById('gift-video');
+    const qrisSection = document.getElementById('qris-section');
+
+    if (video && qrisSection) {
+      video.addEventListener('ended', () => {
+        // Small delay biar smooth
+        setTimeout(() => {
+          qrisSection.classList.add('revealed');
+          // Scroll ke QRIS section
+          qrisSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 400);
+      });
+
+      // Fallback: jika video tidak ada / error, langsung tampilkan QRIS
+      video.addEventListener('error', () => {
+        qrisSection.classList.add('revealed');
+      });
+    }
+
+    // === Aurora main loop ===
     let time = 0;
     function loop() {
       time += 0.016;
