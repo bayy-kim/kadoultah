@@ -1,20 +1,23 @@
 import { useState, useEffect } from 'react';
 import Canvas3D from './components/Canvas3D';
 import HTMLOverlay from './components/HTMLOverlay';
+import PasswordGate from './components/PasswordGate';
+import LoadingScreen from './components/LoadingScreen';
+import FloatingMusicPlayer from './components/FloatingMusicPlayer';
 import { THEME_HUE } from './config/content';
 import './styles/index.css';
 
 export default function App() {
+  const [phase, setPhase] = useState('gate'); // gate → loading → web
   const [activeSection, setActiveSection] = useState(0);
   const [isBlown, setIsBlown] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
 
-  // Set the global custom property for theme color
   useEffect(() => {
     document.documentElement.style.setProperty('--hue', String(THEME_HUE));
   }, []);
 
-  // Track global scroll progress
+  // Scroll tracking
   useEffect(() => {
     const handleScroll = () => {
       const totalScroll = document.documentElement.scrollHeight - window.innerHeight;
@@ -26,13 +29,13 @@ export default function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleSectionChange = (sectionIndex) => {
-    setActiveSection(sectionIndex);
-  };
+  const handlePasswordSuccess = () => setPhase('loading');
+  const handleLoadingComplete = () => setPhase('web');
+  const handleSectionChange = (sectionIndex) => setActiveSection(sectionIndex);
+  const handleBlow = () => setIsBlown(true);
 
-  const handleBlow = () => {
-    setIsBlown(true);
-  };
+  if (phase === 'gate') return <PasswordGate onSuccess={handlePasswordSuccess} />;
+  if (phase === 'loading') return <LoadingScreen onComplete={handleLoadingComplete} />;
 
   return (
     <main style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}>
@@ -50,15 +53,16 @@ export default function App() {
         }}
       />
 
-      {/* 3D Canvas Background */}
-      <Canvas3D activeSection={activeSection} isBlown={isBlown} />
+      <Canvas3D scrollProgress={scrollProgress} isBlown={isBlown} />
 
-      {/* HTML Content Scroll Foreground */}
       <HTMLOverlay
         onSectionChange={handleSectionChange}
         onBlow={handleBlow}
         isBlown={isBlown}
       />
+
+      {/* Floating Music Player */}
+      <FloatingMusicPlayer autoPlay />
     </main>
   );
 }

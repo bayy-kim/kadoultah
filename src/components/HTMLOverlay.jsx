@@ -5,6 +5,8 @@ import IntroSection from './sections/IntroSection';
 import JourneySection from './sections/JourneySection';
 import CakeSection from './sections/CakeSection';
 import LetterSection from './sections/LetterSection';
+import GallerySection from './sections/GallerySection';
+import ClosingSection from './sections/ClosingSection';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -16,7 +18,6 @@ export default function HTMLOverlay({ onSectionChange, onBlow, isBlown }) {
     const scrollTriggers = [];
 
     sections.forEach((section, index) => {
-      // Map scroll progress of each section to trigger the section update
       const st = ScrollTrigger.create({
         trigger: section,
         start: 'top 50%',
@@ -41,6 +42,8 @@ export default function HTMLOverlay({ onSectionChange, onBlow, isBlown }) {
       <JourneySection />
       <CakeSection onBlow={onBlow} isBlown={isBlown} />
       <LetterSection />
+      <GallerySection />
+      <ClosingSection />
     </div>
   );
 }

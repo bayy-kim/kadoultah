@@ -6,6 +6,9 @@
 // ✏️ GANTI DI SINI — Nama orang yang berulang tahun
 export const BIRTHDAY_NAME = "yeshi";
 
+// ✏️ GANTI DI SINI — Umur yang dirayakan
+export const BIRTHDAY_AGE = 19;
+
 // ✏️ GANTI DI SINI — Tahun lahir (untuk menghitung umur, opsional)
 export const BIRTH_YEAR = 2000;
 
@@ -66,12 +69,46 @@ Kamu adalah orang yang luar biasa, dan aku sangat bersyukur bisa mengenalmu. Jan
 Sekali lagi, selamat ulang tahun! Semoga hari ini penuh dengan cinta, tawa, dan kebahagiaan.
 
 Dengan penuh cinta,
-[Nama Pengirim] 💕`;
+Bayu Muhamad Arib Irfani 💕`;
 
-// ✏️ GANTI DI SINI — Path file musik latar
-// Taruh file musik di folder public/music/ lalu update path-nya
-// Contoh: "/music/lagu-ulang-tahun.mp3"
-export const AUDIO_SRC = "/music/background-music.mp3";
+// ✏️ GANTI DI SINI — Daftar lagu player
+export const SONGS = [
+  {
+    src: "/music/Barasuara - Terbuang Dalam Waktu.mp3",
+    title: "Terbuang Dalam Waktu",
+    artist: "Barasuara",
+    color: "#ff7597",
+    poster: "#ff4070",
+  },
+  {
+    src: "/music/Yovie Nuno - Janji Suci.mp3",
+    title: "Janji Suci",
+    artist: "Yovie Nuno",
+    color: "#8b5cf6",
+    poster: "#7c3aed",
+  },
+  {
+    src: "/music/Ari Lasso - Cinta Terakhir.mp3",
+    title: "Cinta Terakhir",
+    artist: "Ari Lasso",
+    color: "#10b981",
+    poster: "#059669",
+  },
+];
 
-// ✏️ GANTI DI SINI — Judul lagu yang tampil di audio player
-export const AUDIO_TITLE = "Lagu Untuk Kamu ♪";
+// ✏️ GANTI DI SINI — Data galeri foto (tambah/sesuain sesuai keinginan)
+export const GALLERY_PHOTOS = [
+  { color: "#7c3aed", label: "🌸 Momen Pertama", emoji: "🌸", desc: "Hari di mana senyummu pertama kali membuat dunia berhenti sejenak." },
+  { color: "#ec4899", label: "💕 Kebersamaan", emoji: "💫", desc: "Setiap langkah kecil bersamamu terasa seperti petualangan besar." },
+  { color: "#06b6d4", label: "🏔️ Petualangan", emoji: "🌟", desc: "Dari tempat tertinggi hingga terdalam, kau selalu di sisi." },
+  { color: "#f59e0b", label: "🎉 Tawa Bahagia", emoji: "🎈", desc: "Tawamu adalah pengingat bahwa hidup itu indah." },
+  { color: "#10b981", label: "🌿 Tenang Bersama", emoji: "🍃", desc: "Ketenangan yang kau bawa lebih berharga dari apapun." },
+  { color: "#f43f5e", label: "💗 Hangat", emoji: "🫶", desc: "Hatiku selalu hangat setiap kali kau ada di dekat." },
+];
+
+// ✏️ GANTI DI SINI — Teks penutup di akhir website
+export const CLOSING_TITLE = "Terima Kasih 💝";
+export const CLOSING_SUBTITLE = "Untuk semua momen indah yang telah kau berikan";
+export const CLOSING_MESSAGE = `Setiap detik bersamamu adalah anugerah yang tak ternilai. Terima kasih sudah menjadi alasan aku tersenyum setiap hari.
+
+Sampai jumpa di petualangan kita selanjutnya. 💕`;

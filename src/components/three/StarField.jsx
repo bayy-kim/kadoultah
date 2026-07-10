@@ -2,7 +2,7 @@ import { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
-export default function StarField({ count = 800, visible = true }) {
+export default function StarField({ count = 800, position = [0, 0, 0] }) {
   const pointsRef = useRef();
 
   const [positions, colors] = useMemo(() => {
@@ -33,16 +33,14 @@ export default function StarField({ count = 800, visible = true }) {
   }, [count]);
 
   useFrame((state, delta) => {
-    if (!pointsRef.current || !visible) return;
+    if (!pointsRef.current) return;
     // Very slow rotation for calm ambient feel
     pointsRef.current.rotation.y += delta * 0.005;
     pointsRef.current.rotation.x += delta * 0.002;
   });
 
-  if (!visible) return null;
-
   return (
-    <group>
+    <group position={position}>
       <points ref={pointsRef}>
         <bufferGeometry>
           <bufferAttribute

@@ -74,7 +74,7 @@ function PhotoFrame({ position, rotation, color, image, index }) {
   );
 }
 
-export default function FloatingFrames({ visible = true }) {
+export default function FloatingFrames({ position = [0, 0, 0] }) {
   const groupRef = useRef();
 
   // Predefined positions for frames in 3D space
@@ -100,14 +100,12 @@ export default function FloatingFrames({ visible = true }) {
   }, []);
 
   useFrame((state, delta) => {
-    if (!groupRef.current || !visible) return;
+    if (!groupRef.current) return;
     groupRef.current.rotation.y += delta * 0.03;
   });
 
-  if (!visible) return null;
-
   return (
-    <group ref={groupRef}>
+    <group ref={groupRef} position={position}>
       {frameConfigs.map((config, i) => (
         <Float
           key={i}

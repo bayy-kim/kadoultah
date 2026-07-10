@@ -51,7 +51,7 @@ function CandleFlame({ position, isLit }) {
   );
 }
 
-export default function CakeScene({ visible = true, isBlown = false }) {
+export default function CakeScene({ position = [0, 0, 0], isBlown = false }) {
   const groupRef = useRef();
 
   // Generate orbiting glow particles
@@ -106,7 +106,7 @@ export default function CakeScene({ visible = true, isBlown = false }) {
   const explosionTimeRef = useRef(null);
 
   useFrame((state, delta) => {
-    if (!groupRef.current || !visible) return;
+    if (!groupRef.current) return;
     groupRef.current.rotation.y += delta * 0.1;
 
     // Animate explosion
@@ -132,10 +132,8 @@ export default function CakeScene({ visible = true, isBlown = false }) {
     }
   });
 
-  if (!visible) return null;
-
   return (
-    <group ref={groupRef}>
+    <group ref={groupRef} position={position}>
       {/* Abstract cake — stacked cylinders */}
       {/* Bottom tier */}
       <mesh position={[0, -0.2, 0]}>

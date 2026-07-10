@@ -2,7 +2,7 @@ import { useRef, useMemo } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
-export default function ParticleField({ count = 500, visible = true }) {
+export default function ParticleField({ count = 500, position = [0, 0, 0] }) {
   const meshRef = useRef();
   const mouseRef = useRef({ x: 0, y: 0 });
   const { viewport } = useThree();
@@ -46,7 +46,7 @@ export default function ParticleField({ count = 500, visible = true }) {
 
   // Animate particles each frame
   useFrame((state, delta) => {
-    if (!meshRef.current || !visible) return;
+    if (!meshRef.current) return;
 
     const time = state.clock.elapsedTime;
     const posAttr = meshRef.current.geometry.attributes.position;
@@ -70,10 +70,8 @@ export default function ParticleField({ count = 500, visible = true }) {
     meshRef.current.rotation.y += delta * 0.02;
   });
 
-  if (!visible) return null;
-
   return (
-    <group onPointerMove={handlePointerMove}>
+    <group position={position} onPointerMove={handlePointerMove}>
       {/* Invisible plane to capture mouse events */}
       <mesh visible={false}>
         <planeGeometry args={[100, 100]} />
